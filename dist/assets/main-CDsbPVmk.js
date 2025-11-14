@@ -1,4 +1,4 @@
-import"./style-CvSgZ4HU.js";import{P as s}from"./ProductData-ckpWzqDt.js";function r(t){return`
+import"./style-CvSgZ4HU.js";import{P as s}from"./ProductData-D6Sl5V2y.js";function r(t){return`
     <li class="product-card">
         <h2>${t.Brand.Name}</h2>
         <h3>${t.NameWithoutBrand}</h3>
