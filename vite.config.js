@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   root: "src/",
+  base: "/sleepoutside-team05/", // 👈 This is critical for GitHub Pages
 
   build: {
     outDir: "../dist",
