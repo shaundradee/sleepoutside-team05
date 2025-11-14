@@ -205,11 +205,26 @@ button {
 
 /* Start cart list card styles */
 .cart-card {
+  position: relative; /* Enables absolute positioning inside */
   display: grid;
   grid-template-columns: 25% auto 15%;
   font-size: var(--small-font);
   /* max-height: 120px; */
   align-items: center;
+}
+
+.remove-icon {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  font-size: 1.2rem;
+  color: #c0392b;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.remove-icon:hover {
+  color: #e74c3c;
 }
 
 .cart-card__image {
