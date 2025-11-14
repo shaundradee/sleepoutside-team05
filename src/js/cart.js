@@ -12,7 +12,7 @@ function renderCartContents() {
 }
 
 // Select the product list container for event delegation in this format to handle if no items exist in cart or DOM not ready
-const productList = document.querySelector(".product-list"); 
+const productList = document.querySelector(".product-list");
 // Event delegation for remove icons
 if (productList) {
   productList.addEventListener("click", function (e) {
@@ -25,7 +25,6 @@ if (productList) {
     }
   });
 }
-
 
 function cartItemTemplate(item) {
   // adding aria-label and role to remove icon for accessibility to the html span element
