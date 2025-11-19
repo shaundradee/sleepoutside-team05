@@ -1,1 +1,0 @@
-function o(t){const r=JSON.parse(localStorage.getItem(t));return r&&Array.isArray(r)?r:[]}function n(t,r){localStorage.setItem(t,JSON.stringify(r))}function s(t){const r=window.location.search;return new URLSearchParams(r).get(t)}export{s as a,o as g,n as s};
