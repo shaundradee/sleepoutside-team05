@@ -1,4 +1,7 @@
+import { loadHeaderFooter } from "./utils.mjs";
 import { getLocalStorage } from "./utils.mjs";
+
+loadHeaderFooter();
 
 function renderCartContents() {
   let cartItems = getLocalStorage("so-cart") || [];
@@ -30,10 +33,10 @@ function cartItemTemplate(item) {
   // adding aria-label and role to remove icon for accessibility to the html span element
   const newItem = `<li class="cart-card divider">
     <span class="remove-icon" data-id="${item.Id}" aria-label="Remove item from cart" role="button" tabindex="0">&times;</span>
-    <a href="#" class="cart-card__image">
-        <img src="../public/images/${item.Image}" alt="${item.Name}" />
+    <a href="/product_pages/index.html?product=${item.Id}" class="cart-card__image">
+      <img src="/images/${item.Image}" alt="${item.Name}" />
     </a>
-    <a href="#">
+    <a href="/product_pages/index.html?product=${item.Id}">
       <h2 class="card__name">${item.Name}</h2>
     </a>
     <p class="cart-card__color">${item.Colors[0].ColorName}</p>

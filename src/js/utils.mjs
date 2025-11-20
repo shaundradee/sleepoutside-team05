@@ -40,3 +40,24 @@ export function renderListWithTemplate(template, parentElement, list, position =
   }
   parentElement.insertAdjacentHTML(position, htmlStrings.join(""));
 }
+
+// load header and footer
+export async function loadHeaderFooter() {
+  // load the header
+  const header = await fetch("/partials/header.html");
+  const headerText = await header.text();
+  document.querySelector("#main-header").innerHTML = headerText;
+  // load the footer
+  const footer = await fetch("/partials/footer.html");
+  const footerText = await footer.text();
+  document.querySelector("#main-footer").innerHTML = footerText;
+
+  //update cart count in header
+  const cartItems = getLocalStorage("so-cart") || [];
+  const cartCount = cartItems.length;
+  const cartCountElement = document.getElementById("cart-count");
+  if (cartCountElement) {
+    cartCountElement.textContent = cartCount;
+  }
+
+}
