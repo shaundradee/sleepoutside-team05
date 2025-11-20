@@ -1,117 +1,130 @@
-import { renderListWithTemplate } from "./utils.mjs";
+import { renderListWithTemplate, getLocalStorage, setLocalStorage, updateCartCount } from "./utils.mjs";
+
+
 
 function cartItemTemplate(item) {
-// adding aria-label and role to remove icon for accessibility to the html span element
+    const qty = item.quantity ?? 1;
+    const lineTotal = (item.FinalPrice * qty).toFixed(2);
+
     return `
-    <li class="cart-card divider">
+    <li class="cart-card divider" data-id="${item.Id}">
         <span class="remove-icon" data-id="${item.Id}" aria-label="Remove item from cart" role="button" tabindex="0">&times;</span>
-        <a href="#" class="cart-card__image"> 
-            <img src="${item.Image}" alt="${item.Name}" /> 
-        </a> 
-        <a href="#"> 
-            <h2>${item.Brand.Name}</h2> 
+
+        <a href="/product_pages/index.html?product=${item.Id}" class="cart-card__image">
+        <img src="/images/${item.Image}" alt="${item.Name}" />
         </a>
-        <h3>${item.NameWithoutBrand}</h3> 
-        <p class="cart-card__color">${item.Colors[0].ColorName}</p>
-        <p>Price: $${item.FinalPrice.toFixed(2)}</p>
-        <div class="quantity-controls"> 
-            <button class="decrement" data-id="${item.Id}">-</button>
-            <span class="quantity">${item.quantity}</span>
-            <button class="increment" data-id="${item.Id}">+</button> 
+
+        <a href="/product_pages/index.html?product=${item.Id}">
+        <h2 class="card__name">${item.Name}</h2>
+        </a>
+
+        <p class="cart-card__color">${item.Colors?.[0]?.ColorName ?? ""}</p>
+
+        <div class="cart-card__quantity">
+        <button class="decrement" data-id="${item.Id}" aria-label="Decrease quantity">−</button>
+        <span class="quantity" data-id="${item.Id}">${qty}</span>
+        <button class="increment" data-id="${item.Id}" aria-label="Increase quantity">+</button>
         </div>
+
+        <p class="cart-card__price">$${lineTotal}</p>
     </li>
     `;
 }
 
-
 export default class ShoppingCart {
-    constructor(listElement, key = "so-cart") {
-        this.listElement = listElement;
-        this.key = key;
-        // attach/add event listener only once
-        this.addListeners(); 
+    constructor(listSelector = ".product-list", storageKey = "so-cart") {
+        this.listElement = typeof listSelector === "string" ? document.querySelector(listSelector) : listSelector;
+        this.key = storageKey;
+
+        // Bind the handler so we can remove or ensure single attachment if needed
+        this._onClick = this._onClick.bind(this);
+
+        // Attach single delegated listener if the container exists
+        if (this.listElement) {
+            this.listElement.addEventListener("click", this._onClick);
+        }
     }
 
-    init() {
-        const cartItems = this.aggregateCartItems();
-        this.renderListWithTemplate(cartItemTemplate, this.listElement, cartItems, "afterbegin", true);
-    }
-
-    // Retrieve cart items from local storage
+    // ----- storage helpers -----
     getCartItems() {
-        const cart = localStorage.getItem(this.key);
-        return cart ? JSON.parse(cart) : [];
+        // getLocalStorage returns [] if missing or not an array per your utils
+        return getLocalStorage(this.key);
     }
 
     saveCartItems(items) {
-        localStorage.setItem(this.key, JSON.stringify(items));
+        setLocalStorage(this.key, items);
     }
 
-    // Group duplicates by Id
-    aggregateCartItems() {
-        const items = this.getCartItems();
-        const grouped = {};
-
-        items.forEach(item => {
-            if (!grouped[item.Id]) {
-            grouped[item.Id] = { ...item, quantity: 1 };
+    // ----- normalize stored items so they have quantity -----
+    normalizeItems(items) {
+        // Convert older array-of-duplicates format into array-with-quantity,
+        // i.e. if item appears multiple times, sum into single item.quantity
+        const map = {};
+        (items || []).forEach(it => {
+            const id = it.Id;
+            if (!map[id]) {
+            // create shallow copy so we don't mutate original object references unexpectedly
+            map[id] = { ...it, quantity: Number(it.quantity ?? 1) };
             } else {
-            grouped[item.Id].quantity++;
+            map[id].quantity = (map[id].quantity || 1) + (Number(it.quantity ?? 1));
             }
         });
-
-        return Object.values(grouped);
+        return Object.values(map);
     }
 
-    // Add event listerners
-    addListeners() {
-        this.listElement.addEventListener("click", (e) => {
-        const id = e.target.dataset.id;
-        
-            if (!id) return;
-        
-            if (e.target.classList.contains("increment")) {
-                this.incrementItem(id);
-            }
-        
-            if (e.target.classList.contains("decrement")) {
-                this.decrementItem(id);
-            }
-        
-            if (e.target.classList.contains("remove-icon")) {
-                this.removeAllCopies(id);
-            }
-        });
-        
+    // ----- public API -----
+    // Render current cart into the list element
+    render() {
+        if (!this.listElement) return;
+
+        // Ensure items are normalized to include quantity
+        const raw = this.getCartItems();
+        const items = this.normalizeItems(raw);
+
+        // Use your utils renderer and tell it to clear first (clear = true)
+        renderListWithTemplate(cartItemTemplate, this.listElement, items, "afterbegin", true);
     }
 
-    // Cart item manipulation methods
-    incrementItem(id) {
-        const items = this.getCartItems();
-        const itemToAdd = items.find(item => item.Id === id);
-        // safeguard
-        if (!itemToAdd) return;
+    // ----- internal event handling -----
+    _onClick(e) {
+        // Determine what was clicked, handle increment / decrement / remove
+        const target = e.target;
+        const id = target?.dataset?.id;
+        if (!id) return;
 
-        if (itemToAdd) {
-            items.push(itemToAdd);
-            this.saveCartItems(items);
-            this.init();
-        }
-    }
-    decrementItem(id) {
+        // Load items as stored (note: they might be in various shapes; normalize as needed)
         let items = this.getCartItems();
-        const index = items.findIndex(item => item.Id === id);
-        if (index !== -1) {
-            items.splice(index, 1);
-            this.saveCartItems(items);
-            this.init();
-        }
-    }
+        items = this.normalizeItems(items);
 
-    removeAllCopies(id) {
-        let items = this.getCartItems();
-        items = items.filter(item => item.Id !== id);
-        this.saveCartItems(items);
-        this.init();
+        const idx = items.findIndex(i => i.Id == id); // loose equality to handle string/number mismatch
+        if (idx === -1) return;
+
+        if (target.classList.contains("increment")) {
+            items[idx].quantity = (items[idx].quantity || 1) + 1;
+            this.saveCartItems(items);
+            updateCartCount();
+            this.render();
+            return;
+        }
+
+        if (target.classList.contains("decrement")) {
+            items[idx].quantity = (items[idx].quantity || 1) - 1;
+            if (items[idx].quantity <= 0) {
+                // remove item entirely
+                items.splice(idx, 1);
+            }
+            this.saveCartItems(items);
+            updateCartCount();
+            this.render();
+            return;
+        }
+
+        if (target.classList.contains("remove-icon")) {
+            items.splice(idx, 1);
+            this.saveCartItems(items);
+            updateCartCount();
+            this.render();
+            return;
+        }
     }
 }
