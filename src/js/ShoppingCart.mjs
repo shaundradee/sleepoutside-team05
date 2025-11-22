@@ -76,14 +76,22 @@ export default class ShoppingCart {
     // Render current cart into the list element
     render() {
         if (!this.listElement) return;
-
-        // Ensure items are normalized to include quantity
+      
         const raw = this.getCartItems();
         const items = this.normalizeItems(raw);
-
-        // Use your utils renderer and tell it to clear first (clear = true)
+      
         renderListWithTemplate(cartItemTemplate, this.listElement, items, "afterbegin", true);
-    }
+      
+        // --- NEW subtotal update ---
+        const subtotal = this.calculateSubtotal(items);
+        const subtotalElement = document.getElementById("cart-subtotal");
+        if (subtotalElement) {
+            subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+        }
+      
+        // --- Update cart icon count too ---
+        if (typeof updateCartCount === "function") updateCartCount();
+      }
 
     // ----- internal event handling -----
     _onClick(e) {
@@ -127,4 +135,11 @@ export default class ShoppingCart {
             return;
         }
     }
+    calculateSubtotal(items) {
+        return items.reduce((sum, item) => {
+          const qty = item.quantity ?? 1;
+          return sum + item.FinalPrice * qty;
+        }, 0);
+      }
+      
 }

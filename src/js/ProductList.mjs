@@ -5,10 +5,10 @@ function productListTemplate(product) {
     <li class="product-card">
         <h2>${product.Brand.Name}</h2>
         <h3>${product.NameWithoutBrand}</h3>
-        <img src="${product.Image}" alt="${product.NameWithoutBrand}" />
-        <p>Price: ${product.FinalPrice.toFixed(2)}</p>
+        <img src="${product.Images.PrimaryMedium}" alt="${product.Name}">        
+        <p>Price: ${product.FinalPrice}</p>
         <p>Color: ${product.Colors[0].ColorName}</p>
-        <a href="product_pages/?products=${product.Id}">View Details</a>
+        <a href="/product_pages/index.html?product=${product.Id}">View Details</a>
     </li>
     `;
 }
@@ -23,9 +23,17 @@ export default class ProductList {
     }
 
     async init() {
-        // the dataSource will return a Promise...so you can use await to resolve it.
-        const list = await this.dataSource.getData();
+        const list = await this.dataSource.getData(this.category);
+        this.renderList(list);
+        document.querySelector(".title").textContent = this.category;
+    }
 
-        this.renderListWithTemplate(productListTemplate, this.listElement, list);    
+    renderList(list) {
+        // const htmlStrings = list.map(productListTemplate);
+        // this.listElement.insertAdjacentHTML("afterbegin", htmlStrings.join(""));
+
+        // apply use new utility function instead of the commented code above
+        renderListWithTemplate(productListTemplate, this.listElement, list);
+
     }
 }

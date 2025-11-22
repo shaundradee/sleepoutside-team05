@@ -81,7 +81,7 @@ export function updateCartCount() {
   const countElement = document.getElementById("cart-count");
 
   if (countElement) {
-    // If using quantities:
+    // using quantities if available
     const totalQty = cartItems.reduce(
       (sum, item) => sum + (Number(item.quantity ?? 1)),
       0

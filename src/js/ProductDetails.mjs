@@ -49,7 +49,8 @@ function productDetailsTemplate(product) {
   document.querySelector('h3').textContent = product.NameWithoutBrand;
 
   const productImage = document.getElementById('productImage');
-  productImage.src = product.Image.replace("/images/", "/images/");
+  // Including optional chaining to avoid errors if Images or PrimaryLarge is undefined
+  productImage.src = product.Images?.PrimaryLarge || "";
   productImage.alt = product.NameWithoutBrand;
 
   document.getElementById('productPrice').textContent = product.FinalPrice;
@@ -58,3 +59,4 @@ function productDetailsTemplate(product) {
 
   document.getElementById('addToCart').dataset.id = product.Id;
 }
+  
